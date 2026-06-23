@@ -31,16 +31,16 @@ namespace Loupedeck.LttlabsArticlesPlugin.Helpers
     {
         public List<string> ArticleUrls { get; set; } = new List<string>();
 
-        public string DefaultUrl { get; set; } = "https://www.lttlabs.com/articles";
+         public string DefaultUrl { get; set; } = String.Empty;
 
         public ArticleSettings()
         {
         }
 
-        public ArticleSettings(List<string> urls, string defaultUrl)
-        {
-            ArticleUrls = urls ?? new List<string>();
-            DefaultUrl = defaultUrl ?? "https://www.lttlabs.com/articles";
-        }
+         public ArticleSettings(List<string> urls, string defaultUrl)
+         {
+             ArticleUrls = urls ?? new List<string>();
+             DefaultUrl = defaultUrl ?? String.Empty;
+         }
     }
 }

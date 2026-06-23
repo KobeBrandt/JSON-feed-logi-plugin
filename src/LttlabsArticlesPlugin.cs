@@ -135,8 +135,7 @@ namespace Loupedeck.LttlabsArticlesPlugin
             {
                 var url = this.WebServer.SettingsUrl;
                 PluginLog.Info($"Opening settings URL: {url}");
-                // This would typically open the URL in the default browser
-                // For Loupedeck plugins, this is handled by the SDK
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
             }
         }
 

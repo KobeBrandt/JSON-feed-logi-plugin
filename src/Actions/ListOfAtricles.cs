@@ -29,20 +29,30 @@
             
             if (this.settings.ArticleUrls == null || this.settings.ArticleUrls.Count == 0)
             {
-                // If no URLs are configured, use the default
-                this.settings.ArticleUrls = new List<string> { "https://www.lttlabs.com/articles/json" };
-                PluginSettingsManager.SetSetting("ArticleSettings", this.settings);
+                PluginLog.Error("No URLs set");
+                this.Plugin.OnPluginStatusChanged(PluginStatus.Error, "Please set a URL first");
+            }
+            else
+            {
+                this.Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
             }
             
-            this.articles = ArticleConnector.GetArticles(this.settings.ArticleUrls).Result;
+            this.articles = ArticleConnector.GetArticlesFromAllUrls().Result;
+            PluginLog.Info($"Found {this.articles.Count} articles:\n{this.articles}");
             return true;
         }
         
         public override IEnumerable<String> GetButtonPressActionNames(DeviceType _)
         {
+
             List<String> result = new List<String>();
 
             result.Add(PluginDynamicFolder.NavigateUpActionName);
+            
+            if (this.settings.ArticleUrls == null || this.settings.ArticleUrls.Count == 0)
+            {
+                result.Add(this.CreateCommandName("No URLs set"));
+            }
 
             foreach (var article in this.articles)
             {

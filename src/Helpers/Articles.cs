@@ -8,7 +8,7 @@
     using System.Text.Json.Serialization;
     using System.Threading.Tasks;
 
-    internal class Articles
+    public class Articles
     {
             [JsonPropertyName("version")]
             public string Version { get; set; }

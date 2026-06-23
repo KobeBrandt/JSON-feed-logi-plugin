@@ -7,7 +7,7 @@
     using System.Text.Json.Serialization;
     using System.Threading.Tasks;
 
-    internal class Article
+    public class Article
     {
         [JsonPropertyName("id")]
         public String Id { get; set; }

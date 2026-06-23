@@ -9,22 +9,22 @@
     using System.Text.Json.Serialization;
     using System.Threading.Tasks;
 
-    internal static class ArticleConnector
+    public static class ArticleConnector
     {
         private static readonly HttpClient client = new HttpClient();
         
-        internal static async Task<List<Article>> GetArticles()
+        public static async Task<List<Article>> GetArticles()
         {
             return await GetArticlesFromAllUrls();
         }
         
-        internal static async Task<List<Article>> GetArticles(List<String> urls)
-        {
-            var settings = new ArticleSettings(urls, "https://www.lttlabs.com/articles");
-            return await GetArticlesFromUrls(urls);
-        }
+         public static async Task<List<Article>> GetArticles(List<String> urls)
+         {
+             var settings = new ArticleSettings(urls, String.Empty);
+             return await GetArticlesFromUrls(urls);
+         }
         
-        internal static async Task<List<Article>> GetArticlesFromUrls(List<String> urls)
+        public static async Task<List<Article>> GetArticlesFromUrls(List<String> urls)
         {
             var allArticles = new List<Article>();
             
@@ -47,7 +47,7 @@
             return allArticles;
         }
         
-        internal static async Task<List<Article>> GetArticlesFromAllUrls()
+        public static async Task<List<Article>> GetArticlesFromAllUrls()
         {
             var allArticles = new List<Article>();
             var settings = PluginSettingsManager.GetSetting<ArticleSettings>("ArticleSettings", new ArticleSettings());
@@ -71,7 +71,7 @@
             return allArticles;
         }
         
-        internal static async Task<List<Article>> GetArticlesFromUrl(String url)
+        public static async Task<List<Article>> GetArticlesFromUrl(String url)
         {
             try
             {
