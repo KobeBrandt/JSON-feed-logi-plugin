@@ -52,7 +52,14 @@
             var allArticles = new List<Article>();
             var settings = PluginSettingsManager.GetSetting<ArticleSettings>("ArticleSettings", new ArticleSettings());
             
-            foreach (var url in settings.ArticleUrls)
+            var urls = settings.ArticleUrls ?? new List<string>();
+            
+            if (urls.Count == 0)
+            {
+                urls = LoadUrlsFromFile();
+            }
+            
+            foreach (var url in urls)
             {
                 try
                 {
@@ -71,29 +78,78 @@
             return allArticles;
         }
         
-        public static async Task<List<Article>> GetArticlesFromUrl(String url)
+        private static List<string> LoadUrlsFromFile()
         {
             try
             {
-                HttpResponseMessage response = await client.GetAsync(url);
-                if (response.IsSuccessStatusCode)
+                var plugin = PluginSettingsManager.IsInitialized ? (Plugin)typeof(PluginSettingsManager).GetField("_pluginInstance", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.GetValue(null) : null;
+                if (plugin != null)
                 {
-                    string responseBody = await response.Content.ReadAsStringAsync();
-                    PluginLog.Info($"Response from {url}: {responseBody}");
-                    var json = JsonSerializer.Deserialize<Articles>(responseBody);
-                    return json?.Article;
-                }
-                else
-                {
-                    PluginLog.Error($"Error fetching {url}: {response.StatusCode}");
-                    return null;
+                    var pluginDataDir = plugin.GetPluginDataDirectory();
+                    var filePath = System.IO.Path.Combine(pluginDataDir, "NamedUrlSettings.json");
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        var json = System.IO.File.ReadAllText(filePath);
+                        var namedUrlSettings = System.Text.Json.JsonSerializer.Deserialize<NamedUrlSettings>(json);
+                        if (namedUrlSettings?.NamedUrls != null)
+                        {
+                            PluginLog.Info("Loaded " + namedUrlSettings.NamedUrls.Count + " URLs from NamedUrlSettings.json file");
+                            return namedUrlSettings.NamedUrls.Select(nu => nu.Url).Where(url => !string.IsNullOrEmpty(url)).ToList();
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                PluginLog.Error($"Exception fetching {url}: {ex.Message}");
-                return null;
+                PluginLog.Warning("Could not load URLs from file: " + ex.Message);
             }
+            return new List<string>();
         }
+        
+         public static async Task<List<Article>> GetArticlesFromUrl(String url)
+         {
+             try
+             {
+                 HttpResponseMessage response = await client.GetAsync(url);
+                 if (response.IsSuccessStatusCode)
+                 {
+                     string responseBody = await response.Content.ReadAsStringAsync();
+                     PluginLog.Info($"Response from {url}");
+                     
+                     // Check if the response is valid JSON
+                     if (string.IsNullOrWhiteSpace(responseBody) || !IsValidJson(responseBody))
+                     {
+                         PluginLog.Error($"Invalid JSON response from {url}");
+                         return null;
+                     }
+                     
+                     var json = JsonSerializer.Deserialize<Articles>(responseBody);
+                     return json?.Article;
+                 }
+                 else
+                 {
+                     PluginLog.Error($"Error fetching {url}: {response.StatusCode}");
+                     return null;
+                 }
+             }
+             catch (Exception ex)
+             {
+                 PluginLog.Error($"Exception fetching {url}: {ex.Message}");
+                 return null;
+             }
+         }
+         
+         private static bool IsValidJson(string jsonString)
+         {
+             try
+             {
+                 using (JsonDocument.Parse(jsonString)) { }
+                 return true;
+             }
+             catch
+             {
+                 return false;
+             }
+         }
     }
 }

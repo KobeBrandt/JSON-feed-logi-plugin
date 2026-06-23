@@ -378,10 +378,24 @@ namespace Loupedeck.LttlabsArticlesPlugin.Services
                          PluginLog.Info("Saved " + namedUrlSettings.NamedUrls.Count + " named URLs");
                      }
 
-                     this.SendJsonResponse(response, new {
-                         success = true,
-                         message = "Settings saved successfully"
-                     });
+                      this.SendJsonResponse(response, new {
+                          success = true,
+                          message = "Settings saved successfully"
+                      });
+                      
+                      // Reload articles in the dynamic folder
+                      try
+                      {
+                          var listOfArticles = ListOfAtricles.Instance;
+                          if (listOfArticles != null)
+                          {
+                              listOfArticles.ReloadArticles();
+                          }
+                      }
+                      catch (Exception ex)
+                      {
+                          PluginLog.Warning("Could not reload articles after settings save: " + ex.Message);
+                      }
                  }
              }
              catch (Exception ex)
