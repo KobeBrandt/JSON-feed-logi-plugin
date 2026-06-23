@@ -33,20 +33,22 @@
              return true;
          }
          
-          public void ReloadArticles()
-          {
-              try
-              {
-                  this.settings = PluginSettingsManager.GetSetting<ArticleSettings>("ArticleSettings", new ArticleSettings());
-                  this.Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
-                  this.articles = ArticleConnector.GetArticlesFromAllUrls().Result;
-              }
-              catch (Exception ex)
-              {
-                  PluginLog.Error("Error reloading articles: " + ex.Message);
-                  this.articles = new List<Article>();
-              }
-          }
+           public void ReloadArticles()
+           {
+               try
+               {
+                   this.settings = PluginSettingsManager.GetSetting<ArticleSettings>("ArticleSettings", new ArticleSettings());
+                   this.Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
+                   this.articles = ArticleConnector.GetArticlesFromAllUrls().Result
+                       .OrderByDescending(a => a.DateModified)
+                       .ToList();
+               }
+               catch (Exception ex)
+               {
+                   PluginLog.Error("Error reloading articles: " + ex.Message);
+                   this.articles = new List<Article>();
+               }
+           }
         
          public override IEnumerable<String> GetButtonPressActionNames(DeviceType _)
          {
