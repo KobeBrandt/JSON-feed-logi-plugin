@@ -15,26 +15,26 @@
       "group": "build",
       "problemMatcher": "$msCompile"
     },
-    {
-      "label": "Package Plugin",
-      "type": "shell",
-      "command": "logiplugintool pack ./bin/Release ./LttlabsArticles.lplug4",
-      "group": "none",
-      "problemMatcher": []
-    },
-    {
-      "label": "Install Plugin",
-      "type": "shell",
-      "command": "logiplugintool install ./LttlabsArticles.lplug4",
-      "group": "none",
-      "problemMatcher": []
-    },
-    {
-      "label": "Uninstall Plugin",
-      "type": "shell",
-      "command": "logiplugintool uninstall LttlabsArticles",
-      "group": "none",
-      "problemMatcher": []
-    }
+      {
+        "label": "Package Plugin",
+        "type": "shell",
+        "command": "logiplugintool pack ./bin/Release ./JsonFeed.lplug4",
+        "group": "none",
+        "problemMatcher": []
+      },
+      {
+        "label": "Install Plugin",
+        "type": "shell",
+        "command": "logiplugintool install ./JsonFeed.lplug4",
+        "group": "none",
+        "problemMatcher": []
+      },
+      {
+        "label": "Uninstall Plugin",
+        "type": "shell",
+        "command": "logiplugintool uninstall JsonFeed",
+        "group": "none",
+        "problemMatcher": []
+      }
   ]
 }

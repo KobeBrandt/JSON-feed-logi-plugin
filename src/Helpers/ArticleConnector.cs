@@ -1,4 +1,4 @@
-﻿namespace Loupedeck.LttlabsArticlesPlugin.Helpers
+﻿namespace Loupedeck.JsonFeedPlugin.Helpers
 {
     using System;
     using System.Collections.Generic;

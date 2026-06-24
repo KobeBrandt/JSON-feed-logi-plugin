@@ -1,4 +1,4 @@
-namespace Loupedeck.LttlabsArticlesPlugin
+namespace Loupedeck.JsonFeedPlugin
 {
     using System;
 

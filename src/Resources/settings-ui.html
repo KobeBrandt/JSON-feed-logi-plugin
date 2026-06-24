@@ -22,8 +22,6 @@
         button.add-btn:hover { background: #357ab8; }
         button.save-btn { background: #2ecc71; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
         button.save-btn:hover { background: #27ae60; }
-        .default-url { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 4px; }
-        .default-url label { font-weight: 600; }
         .status { margin-top: 20px; padding: 10px; border-radius: 4px; }
         .status.success { background: #d4edda; color: #155724; }
         .status.error { background: #f8d7da; color: #721c24; }
@@ -35,16 +33,11 @@
         <h1>Article URL Settings</h1>
         
         <div class='info-box'>
-            <p><strong>Note:</strong> Add your custom named URLs below. These will be saved to a configuration file.</p>
-        </div>
-        
-        <div class='default-url'>
-            <label>Default URL (fallback):</label>
-             <input type='url' id='defaultUrl' placeholder='' />
+            <p><strong>Note:</strong> Add your URLs below. These will be saved to a configuration file.</p>
         </div>
         
         <div class='form-group'>
-            <label>Custom Named URLs:</label>
+            <label>URLs:</label>
             <div id='urlList' class='url-list'></div>
             <button class='add-btn' onclick='addUrl()'>+ Add Named URL</button>
         </div>
@@ -55,7 +48,6 @@
     
     <script>
         let namedUrls = [];
-        let defaultUrl = '';
         let articleUrls = [];
         
         async function loadSettings() {
@@ -64,10 +56,8 @@
                 if (response.ok) {
                     const data = await response.json();
                     namedUrls = data.namedUrls || [];
-                    defaultUrl = data.defaultUrl || '';
                     articleUrls = data.articleUrls || [];
                     renderUrlList();
-                    document.getElementById('defaultUrl').value = defaultUrl;
                 }
             } catch (error) {
                 console.error('Failed to load settings:', error);
@@ -116,8 +106,6 @@
             const status = document.getElementById('status');
             status.style.display = 'none';
             
-            const newDefaultUrl = document.getElementById('defaultUrl').value;
-            
             // Filter out empty entries
             const filteredUrls = namedUrls.filter(item => 
                 item && (item.name?.trim() || item.url?.trim())
@@ -128,7 +116,6 @@
             
             const payload = {
                 articleUrls: articleUrls,
-                defaultUrl: newDefaultUrl,
                 namedUrls: filteredUrls
             };
             
@@ -140,7 +127,7 @@
                 });
                 
                 if (response.ok) {
-                    status.textContent = 'Settings saved successfully! Named URLs have been saved to configuration.';
+                    status.textContent = 'Settings saved successfully! Restart the Logi Plugin service for this to take effect.';
                     status.className = 'status success';
                     status.style.display = 'block';
                     setTimeout(() => status.style.display = 'none', 5000);

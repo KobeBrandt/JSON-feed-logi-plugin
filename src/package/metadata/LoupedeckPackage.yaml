@@ -6,25 +6,25 @@
 type: plugin4
 
 # Name that identifies the plugin.
-name: LttlabsArticles
+name: JsonFeed
 
 # Plugin name that is shown to the user.
-displayName: LttlabsArticles
+displayName: JSON feed
 
 # Short description of the plugin.
-description: Add a short description of the plugin here.
+description: A plugin for displaying JSON feed articles on Loupedeck devices.
 
 # Name of the plugin library file.
-pluginFileName: LttlabsArticlesPlugin.dll
+pluginFileName: JsonFeedPlugin.dll
 
 # Plugin version.
 version: 1.0
 
 # Author of the plugin. The author can be a company or an individual developer.
-author: Admin
+author: KBrandt.dev
 
 # Copyright information.
-copyright: Copyright © 2026 Admin. All rights reserved.
+copyright: Copyright © 2026 KBrandt.dev. All rights reserved.
 
 
 # ==================================================================================================

@@ -1,8 +1,8 @@
-namespace Loupedeck.LttlabsArticlesPlugin.Actions
+namespace Loupedeck.JsonFeedPlugin.Actions
 {
     using System;
     using System.Diagnostics;
-    using Loupedeck.LttlabsArticlesPlugin.Helpers;
+    using Loupedeck.JsonFeedPlugin.Helpers;
 
     internal class OpenSettings : PluginDynamicCommand
     {
@@ -17,7 +17,7 @@ namespace Loupedeck.LttlabsArticlesPlugin.Actions
 
         protected override void RunCommand(String actionParameter)
         {
-            if (this.Plugin is LttlabsArticlesPlugin plugin && plugin.WebServer != null)
+            if (this.Plugin is JsonFeedPlugin plugin && plugin.WebServer != null)
             {
                 var url = plugin.WebServer.SettingsUrl;
                 PluginLog.Info($"Opening settings URL: {url}");

@@ -1,4 +1,4 @@
-namespace Loupedeck.LttlabsArticlesPlugin.Services
+namespace Loupedeck.JsonFeedPlugin.Services
 {
     using System;
     using System.Globalization;
@@ -8,8 +8,8 @@ namespace Loupedeck.LttlabsArticlesPlugin.Services
     using System.Text.Json;
     using System.Threading;
     using Loupedeck;
-    using Loupedeck.LttlabsArticlesPlugin.Helpers;
-    using Loupedeck.LttlabsArticlesPlugin.Actions;
+    using Loupedeck.JsonFeedPlugin.Helpers;
+    using Loupedeck.JsonFeedPlugin.Actions;
 
     public class SettingsWebServer : IDisposable
     {
@@ -26,7 +26,7 @@ namespace Loupedeck.LttlabsArticlesPlugin.Services
         private Boolean _isDisposed;
         private Int32 _activePort;
         private static readonly Random _random = new Random();
-        private LttlabsArticlesPlugin? _plugin;
+        private JsonFeedPlugin? _plugin;
 
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
         {
@@ -35,7 +35,7 @@ namespace Loupedeck.LttlabsArticlesPlugin.Services
 
         public String SettingsUrl => "http://localhost:" + this._activePort + "/";
 
-        public void SetPlugin(LttlabsArticlesPlugin plugin)
+        public void SetPlugin(JsonFeedPlugin plugin)
         {
             this._plugin = plugin;
         }
@@ -302,13 +302,13 @@ namespace Loupedeck.LttlabsArticlesPlugin.Services
             try
             {
                 String html;
-                try
+                 try
                 {
-                    html = PluginResources.ReadTextResource("Loupedeck.LttlabsArticlesPlugin.Resources.settings-ui.html");
+                    html = PluginResources.ReadTextResource("Loupedeck.JsonFeedPlugin.Resources.settings-ui.html");
                 }
                 catch
                 {
-                    html = PluginResources.ReadTextResource("Loupedeck.LttlabsArticlesPlugin.src.Resources.settings-ui.html");
+                    html = PluginResources.ReadTextResource("Loupedeck.JsonFeedPlugin.src.Resources.settings-ui.html");
                 }
                 this.SendTextResponse(response, html, "text/html");
             }
@@ -383,14 +383,14 @@ namespace Loupedeck.LttlabsArticlesPlugin.Services
                           message = "Settings saved successfully"
                       });
                       
-                      // Reload articles in the dynamic folder
-                      try
-                      {
-                          var listOfArticles = ListOfAtricles.Instance;
-                          if (listOfArticles != null)
-                          {
-                              listOfArticles.ReloadArticles();
-                          }
+                       // Reload articles in the dynamic folder
+                       try
+                       {
+                           var listOfArticles = ListOfArticles.Instance;
+                           if (listOfArticles != null)
+                           {
+                               listOfArticles.ReloadArticles();
+                           }
                       }
                       catch (Exception ex)
                       {
