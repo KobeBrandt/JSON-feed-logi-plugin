@@ -29,6 +29,8 @@
    <ItemGroup>
      <Reference Include="PluginApi">
        <HintPath>$(PluginApiDir)PluginApi.dll</HintPath>
+         <Private>false</Private>
+         <CopyLocal>false</CopyLocal>
      </Reference>
    </ItemGroup>
 
