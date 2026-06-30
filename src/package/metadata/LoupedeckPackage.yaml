@@ -12,13 +12,13 @@ name: JsonFeed
 displayName: JSON feed
 
 # Short description of the plugin.
-description: A plugin for displaying JSON feed articles on Loupedeck devices.
+description: A plugin for displaying JSON feed articles.
 
 # Name of the plugin library file.
 pluginFileName: JsonFeedPlugin.dll
 
 # Plugin version.
-version: 1.0
+version: 1.1.1
 
 # Author of the plugin. The author can be a company or an individual developer.
 author: KBrandt.dev
