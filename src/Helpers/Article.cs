@@ -24,8 +24,15 @@
         [JsonPropertyName("image")]
         public String Image { get; set; }
 
+        [JsonPropertyName("date_published")]
+        public DateTime DatePublished { get; set; }
+
         [JsonPropertyName("date_modified")]
         public DateTime DateModified { get; set; }
+
+        // Many feeds only set date_published, so sort on whichever date is newest.
+        [JsonIgnore]
+        public DateTime SortDate => this.DateModified > this.DatePublished ? this.DateModified : this.DatePublished;
 
         [JsonPropertyName("author")]
         public Author Author { get; set; }

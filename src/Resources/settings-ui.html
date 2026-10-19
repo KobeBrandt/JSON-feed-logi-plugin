@@ -3,475 +3,619 @@
 <head>
     <meta charset='UTF-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    <title>JSON Feed Plugin - Article URL Settings</title>
+    <meta name='color-scheme' content='dark light'>
+    <title>JSON Feed settings</title>
+    <style>
+        /* Colour tokens. Every text pair meets WCAG AA (4.5:1) and every border,
+           focus ring and control edge meets the 3:1 non-text contrast rule. */
+        :root {
+            --bg: #191919;
+            --surface: #242424;
+            --text: #ececec;
+            --text-muted: #b8b8b8;
+            --border: #8a8a8a;
+            --primary-bg: #03dbc3;
+            --primary-text: #000000;
+            --primary-hover: #5ff0de;
+            --danger-bg: #c42b1c;
+            --danger-hover: #a32317;
+            --danger-text: #ffffff;
+            --focus: #6cb8ff;
+            --error-text: #ff9b91;
+            --success: #6ccb5f;
+            --info-bg: #102a43;
+            --info-border: #3b8eea;
+            --link: #9fd0ff;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #f5f5f5;
+                --surface: #ffffff;
+                --text: #1a1a1a;
+                --text-muted: #555555;
+                --border: #767676;
+                --primary-bg: #006b5f;
+                --primary-text: #ffffff;
+                --primary-hover: #00544a;
+                --danger-bg: #b3261e;
+                --danger-hover: #8c1d17;
+                --danger-text: #ffffff;
+                --focus: #0b57d0;
+                --error-text: #b3261e;
+                --success: #146c2e;
+                --info-bg: #e6f0fb;
+                --info-border: #0b57d0;
+                --link: #0b57d0;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* rem units so the page follows the browser text size setting. */
+        html {
+            font-size: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 1rem;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Skip link (WCAG 2.4.1) */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 0.5rem;
+            background: var(--surface);
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            z-index: 100;
+            font-weight: 600;
+            border: 2px solid var(--focus);
+            border-radius: 4px;
+        }
+
+        .skip-link:focus {
+            top: 0.5rem;
+        }
+
+        main {
+            max-width: 50rem;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        main:focus {
+            outline: none;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin: 0 0 1.25rem;
+        }
+
+        a {
+            color: var(--link);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        /* Focus indicator (WCAG 2.4.7 / 2.4.11) */
+        a:focus-visible,
+        input:focus-visible,
+        button:focus-visible {
+            outline: 3px solid var(--focus);
+            outline-offset: 2px;
+        }
+
+        .info-box {
+            background: var(--info-bg);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.25rem;
+            border-left: 4px solid var(--info-border);
+        }
+
+        .info-box p {
+            margin: 0;
+        }
+
+        fieldset {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1.25rem;
+            margin: 0;
+        }
+
+        legend {
+            font-size: 1.125rem;
+            font-weight: 600;
+            padding: 0 0.5rem;
+        }
+
+        .instructions {
+            color: var(--text-muted);
+            margin: 0 0 1rem;
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            font-style: italic;
+            margin: 1rem 0;
+        }
+
+        .url-list {
+            list-style: none;
+            margin: 0 0 1rem;
+            padding: 0;
+        }
+
+        .url-item {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        .url-field {
+            flex: 1;
+            min-width: 12rem;
+        }
+
+        .url-field label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .hint {
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        input[type='text'],
+        input[type='url'] {
+            width: 100%;
+            min-height: 2.75rem;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            font: inherit;
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        input[aria-invalid='true'] {
+            border-color: var(--error-text);
+        }
+
+        ::placeholder {
+            color: var(--text-muted);
+            opacity: 1;
+        }
+
+        .field-error {
+            color: var(--error-text);
+            font-weight: 600;
+            margin: 0.25rem 0 0;
+        }
+
+        /* Buttons are at least 44px tall (WCAG 2.5.8 / 2.5.5). */
+        button {
+            font: inherit;
+            font-weight: 600;
+            min-height: 2.75rem;
+            padding: 0.5rem 1.25rem;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .primary-btn {
+            background: var(--primary-bg);
+            color: var(--primary-text);
+        }
+
+        .primary-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .primary-btn[aria-disabled='true'] {
+            cursor: progress;
+            opacity: 0.8;
+        }
+
+        .secondary-btn {
+            background: transparent;
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .secondary-btn:hover {
+            background: var(--surface);
+            border-color: var(--text);
+        }
+
+        .remove-btn {
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            /* Lines the button up with the inputs, below their labels. */
+            margin-top: 1.75rem;
+        }
+
+        .remove-btn:hover {
+            background: var(--danger-hover);
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .status {
+            margin-top: 1.25rem;
+            font-weight: 600;
+        }
+
+        .status:empty {
+            display: none;
+        }
+
+        .status.success,
+        .status.error {
+            padding: 0.75rem 1rem;
+            background: var(--surface);
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+
+        .status.success {
+            border-left-color: var(--success);
+        }
+
+        .status.error {
+            border-left-color: var(--error-text);
+        }
+
+        /* Icons add a non-colour cue next to the message (WCAG 1.4.1). */
+        .status.success::before {
+            content: '\2713\00a0';
+            color: var(--success);
+        }
+
+        .status.error::before {
+            content: '\26a0\00a0';
+            color: var(--error-text);
+        }
+
+        @media (max-width: 600px) {
+            .url-item {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .url-field {
+                width: 100%;
+            }
+
+            .remove-btn {
+                margin-top: 0;
+                width: 100%;
+            }
+        }
+
+        @media (forced-colors: active) {
+            .status.success,
+            .status.error,
+            .url-item {
+                border: 1px solid CanvasText;
+            }
+        }
+
+        @media print {
+            .skip-link,
+            button {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
     <a href='#main-content' class='skip-link'>Skip to main content</a>
-    
-    <main id='main-content' class='container'>
-        <h1>Article URL Settings</h1>
-        
-        <div class='info-box' role='note'>
-            <p><strong>Note:</strong> Add your URLs below. These will be saved to a configuration file.</p>
+
+    <main id='main-content' tabindex='-1'>
+        <h1>JSON Feed settings</h1>
+
+        <div class='info-box'>
+            <p>Add the feeds you want to see on your device. Each URL must point to a feed in the
+                <a href='https://www.jsonfeed.org/version/1/' target='_blank' rel='noopener noreferrer'>JSON Feed format<span class='visually-hidden'> (opens in a new tab)</span></a>.</p>
         </div>
-        
-        <form id='settingsForm' novalidate aria-labelledby='form-title'>
-            <h2 id='form-title' style='display:none;'>URL Configuration Form</h2>
+
+        <form id='settingsForm' novalidate>
             <fieldset>
-                <legend>URL Configuration</legend>
-                
-                <div class='form-group'>
-                    <label for='urlList'>URLs:</label>
-                    <p class='instructions' id='url-list-desc'>Add one or more named URLs. Each URL will be monitored for new articles.</p>
-                    <div id='urlList' class='url-list' aria-describedby='url-list-desc' role='list' aria-label='List of URL entries'></div>
-                    <button type='button' class='add-btn' onclick='addUrl()' aria-label='Add a new named URL entry'>+ Add Named URL</button>
-                </div>
-                
-                <button type='submit' class='save-btn' onclick='event.preventDefault(); saveSettings()' aria-label='Save all URL settings to configuration'>Save Settings</button>
+                <legend id='feeds-legend'>Feeds</legend>
+                <p class='instructions' id='feeds-desc'>
+                    The name is optional and only helps you recognise the feed on this page.
+                    The feed URL is required and must start with http:// or https://.
+                </p>
+
+                <p id='emptyState' class='empty-state'>Loading your feeds…</p>
+                <ul id='urlList' class='url-list' aria-labelledby='feeds-legend' aria-describedby='feeds-desc'></ul>
+
+                <button type='button' id='addBtn' class='secondary-btn'>+ Add feed</button>
             </fieldset>
+
+            <div class='actions'>
+                <button type='submit' id='saveBtn' class='primary-btn'>Save settings</button>
+            </div>
         </form>
-        
-        <div id='status' class='status' role='alert' aria-live='assertive' style='display:none;' aria-atomic='true'></div>
+
+        <!-- Always in the page, so screen readers announce every change to it. -->
+        <div id='status' class='status' role='status' aria-live='polite' aria-atomic='true'></div>
     </main>
-    
-    
+
+    <template id='urlItemTemplate'>
+        <li class='url-item'>
+            <div class='url-field'>
+                <label data-for='name'>Name <span class='hint'>(optional)</span></label>
+                <input type='text' data-field='name' autocomplete='off' placeholder='For example: Tech news'>
+            </div>
+            <div class='url-field'>
+                <label data-for='url'>Feed URL <span class='hint'>(required)</span></label>
+                <input type='url' data-field='url' inputmode='url' autocomplete='off' spellcheck='false'
+                       aria-required='true' placeholder='https://example.com/feed.json'>
+                <p class='field-error' data-error hidden></p>
+            </div>
+            <button type='button' class='remove-btn'></button>
+        </li>
+    </template>
+
     <script>
         let namedUrls = [];
         let articleUrls = [];
-        
+        let isDirty = false;
+        let isSaving = false;
+        let nextId = 0;
+
+        const list = document.getElementById('urlList');
+        const emptyState = document.getElementById('emptyState');
+        const statusBox = document.getElementById('status');
+        const saveBtn = document.getElementById('saveBtn');
+        const template = document.getElementById('urlItemTemplate');
+
+        function showStatus(message, kind) {
+            statusBox.className = 'status' + (kind ? ' ' + kind : '');
+            // Clear first so the same message is announced again when repeated.
+            statusBox.textContent = '';
+            setTimeout(() => { statusBox.textContent = message; }, 50);
+        }
+
         async function loadSettings() {
             try {
                 const response = await fetch('/api/settings');
-                if (response.ok) {
-                    const data = await response.json();
-                    namedUrls = data.namedUrls || [];
-                    articleUrls = data.articleUrls || [];
-                    renderUrlList();
+                if (!response.ok) {
+                    throw new Error('The plugin answered with status ' + response.status + '.');
                 }
+                const data = await response.json();
+                namedUrls = (data.namedUrls || []).map(item => ({ id: nextId++, name: item.name || '', url: item.url || '' }));
+                articleUrls = data.articleUrls || [];
+                renderUrlList();
             } catch (error) {
-                console.error('Failed to load settings:', error);
+                emptyState.textContent = 'Your feeds could not be loaded.';
+                showStatus('Could not load your settings. Check that the Logi Plugin Service is running, then reload this page. ' + error.message, 'error');
             }
         }
-        
+
         function renderUrlList() {
-            const container = document.getElementById('urlList');
-            container.innerHTML = '';
+            list.replaceChildren();
+            emptyState.textContent = 'No feeds yet. Select "Add feed" to add your first one.';
+            emptyState.hidden = namedUrls.length > 0;
+
             namedUrls.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'url-item';
-                div.setAttribute('role', 'listitem');
-                div.setAttribute('aria-label', `URL entry ${index + 1} of ${namedUrls.length}`);
-                
-                const nameId = `url-name-${index}`;
-                const urlId = `url-value-${index}`;
-                
-                div.innerHTML = `
-                    <div class='url-field'>
-                        <label for='${nameId}'>Folder Name:</label>
-                        <input 
-                            type='text' 
-                            id='${nameId}' 
-                            name='name' 
-                            value='${escapeHtml(item.name || '')}' 
-                            onchange='updateUrl(${index}, "name", this.value)' 
-                            placeholder='Enter folder name'
-                            aria-required='true'
-                            autocomplete='section-${index} name'
-                            aria-describedby='url-list-desc'
-                        />
-                    </div>
-                    <div class='url-field'>
-                        <label for='${urlId}'>URL:</label>
-                        <input 
-                            type='url' 
-                            id='${urlId}' 
-                            name='url' 
-                            value='${escapeHtml(item.url || '')}' 
-                            onchange='updateUrl(${index}, "url", this.value)' 
-                            placeholder='https://example.com'
-                            aria-required='true'
-                            autocomplete='section-${index} url'
-                            aria-describedby='url-list-desc'
-                        />
-                    </div>
-                    <button type='button' onclick='removeUrl(${index})' aria-label='Remove URL entry ${index + 1}'>Remove</button>
-                `;
-                container.appendChild(div);
+                const node = template.content.firstElementChild.cloneNode(true);
+                node.dataset.id = item.id;
+
+                for (const input of node.querySelectorAll('input')) {
+                    const field = input.dataset.field;
+                    input.id = field + '-' + item.id;
+                    input.value = item[field];
+                    input.addEventListener('input', () => {
+                        item[field] = input.value;
+                        isDirty = true;
+                        if (field === 'url') {
+                            setFieldError(node, '');
+                        }
+                    });
+                    node.querySelector(`label[data-for='${field}']`).htmlFor = input.id;
+                }
+
+                const error = node.querySelector('[data-error]');
+                error.id = 'url-error-' + item.id;
+
+                const removeBtn = node.querySelector('.remove-btn');
+                removeBtn.textContent = 'Remove';
+                const hiddenLabel = document.createElement('span');
+                hiddenLabel.className = 'visually-hidden';
+                hiddenLabel.textContent = ' feed ' + (index + 1) + (item.name ? ' (' + item.name + ')' : '');
+                removeBtn.appendChild(hiddenLabel);
+                removeBtn.addEventListener('click', () => removeUrl(item.id));
+
+                list.appendChild(node);
             });
         }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
+
         function addUrl() {
-            namedUrls.push({ name: '', url: '' });
+            const item = { id: nextId++, name: '', url: '' };
+            namedUrls.push(item);
+            isDirty = true;
             renderUrlList();
-            // Focus the newly added URL name input for keyboard users
-            setTimeout(() => {
-                const lastItem = document.querySelector('.url-item:last-child');
-                if (lastItem) {
-                    const nameInput = lastItem.querySelector('input[type="text"]');
-                    if (nameInput) nameInput.focus();
-                }
-            }, 50);
+            document.getElementById('name-' + item.id).focus();
         }
-        
-        function updateUrl(index, field, value) {
-            if (!namedUrls[index]) {
-                namedUrls[index] = { name: '', url: '' };
+
+        function removeUrl(id) {
+            const index = namedUrls.findIndex(item => item.id === id);
+            if (index === -1) {
+                return;
             }
-            namedUrls[index][field] = value;
-        }
-        
-        function removeUrl(index) {
+            const removed = namedUrls[index];
             namedUrls.splice(index, 1);
+            isDirty = true;
             renderUrlList();
-            // Focus the next URL item or Add button after removal for keyboard users
-            const nextItem = document.querySelector('.url-item');
-            if (nextItem) {
-                const firstInput = nextItem.querySelector('input');
-                if (firstInput) firstInput.focus();
+
+            // Keep keyboard focus near where it was: the next feed, else the previous one, else Add.
+            const neighbour = namedUrls[index] || namedUrls[index - 1];
+            if (neighbour) {
+                document.getElementById('name-' + neighbour.id).focus();
             } else {
-                const addBtn = document.querySelector('.add-btn');
-                if (addBtn) addBtn.focus();
+                document.getElementById('addBtn').focus();
+            }
+            showStatus('Removed feed ' + (removed.name || removed.url || (index + 1)) + '. Select "Save settings" to keep this change.');
+        }
+
+        function setFieldError(itemNode, message) {
+            const input = itemNode.querySelector("input[data-field='url']");
+            const error = itemNode.querySelector('[data-error]');
+            error.textContent = message;
+            error.hidden = !message;
+            if (message) {
+                input.setAttribute('aria-invalid', 'true');
+                input.setAttribute('aria-describedby', error.id);
+            } else {
+                input.removeAttribute('aria-invalid');
+                input.removeAttribute('aria-describedby');
             }
         }
-        
-        async function saveSettings() {
-            const status = document.getElementById('status');
-            status.style.display = 'none';
-            
-            // Filter out empty entries
-            const filteredUrls = namedUrls.filter(item => 
-                item && (item.name?.trim() || item.url?.trim())
-            ).map(item => ({
-                name: item.name?.trim() || 'Untitled',
-                url: item.url?.trim() || ''
-            }));
-            
+
+        function urlProblem(item, seenUrls) {
+            const url = item.url.trim();
+            if (!url) {
+                return 'Enter a feed URL, or remove this feed.';
+            }
+            let parsed;
+            try {
+                parsed = new URL(url);
+            } catch {
+                return 'This is not a valid URL. Example: https://example.com/feed.json';
+            }
+            if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                return 'The feed URL must start with http:// or https://.';
+            }
+            if (seenUrls.has(parsed.href)) {
+                return 'This feed is already in the list.';
+            }
+            seenUrls.add(parsed.href);
+            return '';
+        }
+
+        // Returns the number of problems found and moves focus to the first one.
+        function validate() {
+            const seenUrls = new Set();
+            let firstInvalid = null;
+            let problems = 0;
+
+            for (const item of namedUrls) {
+                const node = list.querySelector(`[data-id='${item.id}']`);
+                // An entry left completely empty is skipped on save, not reported.
+                const isBlank = !item.name.trim() && !item.url.trim();
+                const message = isBlank ? '' : urlProblem(item, seenUrls);
+                setFieldError(node, message);
+                if (message) {
+                    problems++;
+                    firstInvalid = firstInvalid || document.getElementById('url-' + item.id);
+                }
+            }
+
+            if (firstInvalid) {
+                firstInvalid.focus();
+            }
+            return problems;
+        }
+
+        async function saveSettings(event) {
+            event.preventDefault();
+            if (isSaving) {
+                return;
+            }
+
+            const problems = validate();
+            if (problems > 0) {
+                showStatus('Not saved. Fix ' + problems + (problems === 1 ? ' feed URL' : ' feed URLs') + ' and try again.', 'error');
+                return;
+            }
+
             const payload = {
                 articleUrls: articleUrls,
-                namedUrls: filteredUrls
+                namedUrls: namedUrls
+                    .filter(item => item.name.trim() || item.url.trim())
+                    .map(item => ({ name: item.name.trim() || 'Untitled', url: item.url.trim() }))
             };
-            
+
+            isSaving = true;
+            saveBtn.setAttribute('aria-disabled', 'true');
+            saveBtn.textContent = 'Saving…';
+            showStatus('Saving…');
+
             try {
                 const response = await fetch('/api/settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
+
                 if (response.ok) {
-                    status.textContent = 'Settings saved successfully! Restart the Logi Plugin service for this to take effect';
-                    status.className = 'status success';
-                    status.style.display = 'block';
-                    setTimeout(() => status.style.display = 'none', 5000);
+                    isDirty = false;
+                    showStatus('Settings saved. The article list on your device is refreshing.', 'success');
                 } else {
-                    const error = await response.json();
-                    status.textContent = 'Error: ' + (error.error || 'Failed to save');
-                    status.className = 'status error';
-                    status.style.display = 'block';
+                    const error = await response.json().catch(() => ({}));
+                    showStatus('Not saved: ' + (error.error || 'the plugin could not save your settings.') + ' Try again.', 'error');
                 }
             } catch (error) {
-                status.textContent = 'Error: ' + error.message;
-                status.className = 'status error';
-                status.style.display = 'block';
+                showStatus('Not saved. The plugin could not be reached. Check that the Logi Plugin Service is running and try again.', 'error');
+            } finally {
+                isSaving = false;
+                saveBtn.removeAttribute('aria-disabled');
+                saveBtn.textContent = 'Save settings';
             }
         }
-        
+
+        document.getElementById('addBtn').addEventListener('click', addUrl);
+        document.getElementById('settingsForm').addEventListener('submit', saveSettings);
+
+        // Warn before leaving the page with unsaved changes.
+        window.addEventListener('beforeunload', event => {
+            if (isDirty) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+
         loadSettings();
     </script>
 </body>
-<style>
-    /* Base Styles */
-    :root {
-        --bg-dark: #191919;
-        --text-primary: #e0e0e0;
-        --text-secondary: #b0b0b0;
-        --accent-primary: #0078d4;
-        --accent-secondary: #03dbc3;
-        --success: #107c10;
-        --error: #a80000;
-        --warning: #85754d;
-        --border-color: #4a4a4a;
-        --focus-ring: #005a9e;
-    }
-    
-    * {
-        box-sizing: border-box;
-    }
-    
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background: var(--bg-dark);
-        color: var(--text-primary);
-        line-height: 1.5;
-    }
-    
-    /* Skip Link - Accessibility (2.4.1) */
-    .skip-link {
-        position: absolute;
-        top: -40px;
-        left: 0;
-        background: var(--accent-primary);
-        color: white;
-        padding: 8px 16px;
-        text-decoration: none;
-        z-index: 100;
-        font-weight: bold;
-        border-radius: 0 0 4px 0;
-    }
-    
-    .skip-link:focus {
-        top: 0;
-        outline: 3px solid var(--focus-ring);
-        outline-offset: 2px;
-    }
-    
-    /* Layout */
-    main {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-    
-    h1 {
-        color: var(--text-primary);
-        margin-bottom: 20px;
-        font-size: 28px;
-    }
-    
-    /* Form Styles */
-    form {
-        margin: 0;
-        padding: 0;
-    }
-    
-    fieldset {
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        padding: 20px;
-        margin: 0;
-    }
-    
-    legend {
-        color: var(--text-primary);
-        font-size: 18px;
-        font-weight: 600;
-        padding: 0 10px;
-    }
-    
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-group > label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--text-primary);
-        font-size: 16px;
-    }
-    
-    .instructions {
-        color: var(--text-secondary);
-        font-size: 14px;
-        margin-bottom: 15px;
-    }
-    
-    /* Info Box */
-    .info-box {
-        background: #003366;
-        color: #ffffff;
-        padding: 15px;
-        border-radius: 4px;
-        margin-bottom: 20px;
-        border-left: 4px solid var(--accent-primary);
-    }
-    
-    .info-box p {
-        margin: 0;
-    }
-    
-    /* URL List */
-    .url-list {
-        margin: 20px 0;
-    }
-    
-    .url-item {
-        display: flex;
-        flex-wrap: wrap;
-        margin-bottom: 15px;
-        gap: 15px;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 4px;
-    }
-    
-    .url-field {
-        flex: 1;
-        min-width: 200px;
-    }
-    
-    .url-field label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
-        color: var(--text-secondary);
-        font-size: 14px;
-    }
-    
-    /* Input Styles */
-    input[type='text'],
-    input[type='url'] {
-        width: 100%;
-        padding: 10px;
-        border: 2px solid var(--border-color);
-        border-radius: 4px;
-        font-size: 14px;
-        color: var(--text-primary);
-        background: var(--bg-dark);
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    
-    /* Focus Styles - WCAG 2.4.7 */
-    input[type='text']:focus,
-    input[type='url']:focus,
-    button:focus {
-        outline: 3px solid var(--focus-ring);
-        outline-offset: 2px;
-        box-shadow: 0 0 0 4px rgba(0, 90, 158, 0.4);
-    }
-    
-    input[type='text']:hover,
-    input[type='url']:hover {
-        border-color: var(--text-secondary);
-    }
-    
-    input[type='text']:focus,
-    input[type='url']:focus {
-        border-color: var(--accent-primary);
-    }
-    
-    /* Placeholder Contrast */
-    ::placeholder {
-        color: var(--text-secondary);
-        opacity: 0.8;
-    }
-    
-    /* Button Styles */
-    button {
-        font-family: inherit;
-        cursor: pointer;
-        border-radius: 4px;
-        font-weight: 500;
-        transition: background-color 0.2s, transform 0.1s;
-    }
-    
-    button:hover {
-        transform: translateY(-1px);
-    }
-    
-    button:active {
-        transform: translateY(0);
-    }
-    
-    .url-item button {
-        padding: 10px 15px;
-        background: var(--error);
-        color: white;
-        border: none;
-        align-self: flex-end;
-        white-space: nowrap;
-        margin-top: 20px;
-    }
-    
-    .url-item button:hover {
-        background: #8a0000;
-    }
-    
-    .add-btn {
-        background: var(--accent-secondary);
-        color: #000000;
-        padding: 8px 16px;
-        border: none;
-        font-size: 14px;
-        margin-top: 10px;
-    }
-    
-    .add-btn:hover {
-        background: #8f66fa;
-        color: white;
-    }
-    
-    .save-btn {
-        background: var(--accent-secondary);
-        color: #000000;
-        padding: 12px 24px;
-        border: none;
-        font-size: 16px;
-        font-weight: 600;
-        margin-top: 10px;
-    }
-    
-    .save-btn:hover {
-        background: #8f66fa;
-        color: white;
-    }
-    
-    /* Status Messages */
-    .status {
-        margin-top: 20px;
-        padding: 12px 15px;
-        border-radius: 4px;
-        font-size: 14px;
-        font-weight: 500;
-    }
-    
-    .status.success {
-        background: #107c10;
-        color: #ffffff;
-        border: none;
-    }
-    
-    .status.error {
-        background: var(--error);
-        color: #ffffff;
-        border: none;
-    }
-    
-    /* Ensure sufficient color contrast for all states */
-    /* All text on dark background uses #e0e0e0 or brighter (6.5:1+) */
-    /* All text on colored backgrounds has been tested for 4.5:1+ contrast */
-    
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-        .url-item {
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .url-field {
-            width: 100%;
-        }
-        
-        .url-item button {
-            margin-top: 0;
-            width: 100%;
-        }
-    }
-    
-    /* Print styles */
-    @media print {
-        .skip-link,
-        button {
-            display: none;
-        }
-    }
-</style>
 </html>

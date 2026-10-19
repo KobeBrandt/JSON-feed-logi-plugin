@@ -206,6 +206,11 @@ namespace Loupedeck.JsonFeedPlugin.Services
                         }
                         else if (request.HttpMethod == "POST")
                         {
+                            if (!this.IsSameOriginJsonRequest(request))
+                            {
+                                this.SendError(response, 403, "Forbidden");
+                                return;
+                            }
                             this.SaveSettings(request, response);
                         }
                         else
@@ -241,6 +246,21 @@ namespace Loupedeck.JsonFeedPlugin.Services
             var isLoopback = IPAddress.IsLoopback(address);
             var isLocalhost = address.Equals(IPAddress.Loopback);
             return isLoopback || isLocalhost;
+        }
+
+        // Other websites open in the browser can also reach localhost. Only accept saves that
+        // come from the settings page itself and send JSON, so a web page cannot change the feeds.
+        private Boolean IsSameOriginJsonRequest(HttpListenerRequest request)
+        {
+            var contentType = request.ContentType ?? String.Empty;
+            if (!contentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var origin = request.Headers["Origin"];
+            return String.IsNullOrEmpty(origin)
+                || String.Equals(origin.TrimEnd('/'), this.SettingsUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
         }
 
         private void AddCorsHeaders(HttpListenerResponse response)
@@ -345,7 +365,7 @@ namespace Loupedeck.JsonFeedPlugin.Services
                  using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
                  {
                      var json = reader.ReadToEnd();
-                     PluginLog.Info("Received settings save request: " + json);
+                     PluginLog.Info("Received settings save request");
                      var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                      
                      // Deserialize the full settings object

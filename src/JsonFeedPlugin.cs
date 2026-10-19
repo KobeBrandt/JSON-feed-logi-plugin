@@ -140,14 +140,17 @@ namespace Loupedeck.JsonFeedPlugin
             this.ReportSettingsPreferenceReady();
         }
 
-        private void OpenSettingsUrl()
+        public void OpenSettingsUrl()
         {
-            if (this.WebServer != null)
+            if (this.WebServer == null)
             {
-                var url = this.WebServer.SettingsUrl;
-                PluginLog.Info($"Opening settings URL: {url}");
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+                PluginLog.Warning("Settings page requested, but the settings web server is not running");
+                return;
             }
+
+            var url = this.WebServer.SettingsUrl;
+            PluginLog.Info($"Opening settings URL: {url}");
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
         }
 
         private void ReportSettingsPreferenceReady() =>

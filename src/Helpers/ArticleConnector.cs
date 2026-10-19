@@ -11,7 +11,15 @@
 
     public static class ArticleConnector
     {
-        private static readonly HttpClient client = new HttpClient();
+        // A short timeout keeps one slow feed from holding up the whole article list.
+        private static readonly HttpClient client = CreateClient();
+
+        private static HttpClient CreateClient()
+        {
+            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("JsonFeedLogiPlugin/1.1");
+            return httpClient;
+        }
         
         public static async Task<List<Article>> GetArticles()
         {
@@ -82,7 +90,7 @@
         {
             try
             {
-                var plugin = PluginSettingsManager.IsInitialized ? (Plugin)typeof(PluginSettingsManager).GetField("_pluginInstance", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.GetValue(null) : null;
+                var plugin = PluginSettingsManager.Plugin;
                 if (plugin != null)
                 {
                     var pluginDataDir = plugin.GetPluginDataDirectory();

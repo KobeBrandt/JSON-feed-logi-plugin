@@ -10,6 +10,8 @@ namespace Loupedeck.JsonFeedPlugin.Helpers
 
         public static Boolean IsInitialized => _pluginInstance != null;
 
+        public static Plugin Plugin => _pluginInstance;
+
         public static void Initialize(Plugin plugin) => _pluginInstance = plugin ?? throw new ArgumentNullException(nameof(plugin));
 
         public static T GetSetting<T>(String settingName, T defaultValue = default)
