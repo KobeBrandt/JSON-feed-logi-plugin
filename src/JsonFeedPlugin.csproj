@@ -47,7 +47,8 @@
     <Message Text="✅ Package files copied to $(OutputPath)..\" Importance="High" />
   </Target>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <!-- CI runners have no local Logi Plugin Service to link or reload, so skip this step there. -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CI)' != 'true'">
     <Exec Condition="$(OS) == 'Windows_NT'" Command="echo $(BaseOutputPath)$(Configuration)\ &gt; &quot;$(PluginDir)$(ProjectName).link&quot;" />
     <Exec Condition="$(OS) != 'Windows_NT'" Command="echo $(BaseOutputPath)$(Configuration)\ &gt; $(PluginDir)$(ProjectName).link" />
     <Message Text="🔨 Created plugin link at: $(PluginDir)$(ProjectName).link" Importance="High" />

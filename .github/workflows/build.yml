@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  PLUGIN_NAME: JsonFeed
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # The build references PluginApi.dll from Logi Plugin Service. Logitech publishes no
+      # separate download for it, so install Logi Options+, which includes Logi Plugin Service.
+      - name: Install Logi Options+
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP "logioptionsplus_installer.exe"
+          Invoke-WebRequest -Uri "https://download01.logi.com/web/ftp/pub/techsupport/optionsplus/logioptionsplus_installer.exe" -OutFile $installer
+          Start-Process -FilePath $installer -ArgumentList "/quiet", "/analytics", "No", "/flow", "No", "/sso", "No", "/update", "No", "/dfu", "No" -Wait
+          $pluginApi = "C:\Program Files\Logi\LogiPluginService\PluginApi.dll"
+          for ($i = 0; $i -lt 60 -and -not (Test-Path $pluginApi); $i++) { Start-Sleep -Seconds 5 }
+          if (-not (Test-Path $pluginApi)) {
+            Write-Error "PluginApi.dll not found at $pluginApi after installing Logi Options+"
+            exit 1
+          }
+
+      - name: Build
+        run: dotnet build ${{ env.PLUGIN_NAME }}Plugin.sln -c Release
+
+      - name: Package
+        run: |
+          dotnet tool install -g logiplugintool
+          logiplugintool pack bin\Release ${{ env.PLUGIN_NAME }}.lplug4
+          logiplugintool verify ${{ env.PLUGIN_NAME }}.lplug4
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PLUGIN_NAME }}.lplug4
+          path: ${{ env.PLUGIN_NAME }}.lplug4
