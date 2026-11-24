@@ -403,6 +403,19 @@
         let isSaving = false;
         let nextId = 0;
 
+        // The plugin opens this page with a per-session token in the URL. Every API call sends it back.
+        const sessionToken = new URLSearchParams(window.location.search).get('token') || '';
+        const apiHeaders = { 'X-Settings-Token': sessionToken };
+
+        function isWebUrl(value) {
+            try {
+                const parsed = new URL(value);
+                return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+            } catch {
+                return false;
+            }
+        }
+
         const list = document.getElementById('urlList');
         const emptyState = document.getElementById('emptyState');
         const statusBox = document.getElementById('status');
@@ -418,7 +431,10 @@
 
         async function loadSettings() {
             try {
-                const response = await fetch('/api/settings');
+                const response = await fetch('/api/settings', { headers: apiHeaders });
+                if (response.status === 403) {
+                    throw new Error('Open this page again from the JSON Feed plugin.');
+                }
                 if (!response.ok) {
                     throw new Error('The plugin answered with status ' + response.status + '.');
                 }
@@ -569,8 +585,13 @@
                 return;
             }
 
+            // Stored article URLs are not shown on this page. Drop any that are not web links,
+            // because the plugin refuses to save them.
+            const validArticleUrls = articleUrls.filter(url => typeof url === 'string' && isWebUrl(url));
+            const droppedCount = articleUrls.length - validArticleUrls.length;
+
             const payload = {
-                articleUrls: articleUrls,
+                articleUrls: validArticleUrls,
                 namedUrls: namedUrls
                     .filter(item => item.name.trim() || item.url.trim())
                     .map(item => ({ name: item.name.trim() || 'Untitled', url: item.url.trim() }))
@@ -584,13 +605,17 @@
             try {
                 const response = await fetch('/api/settings', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { ...apiHeaders, 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
                     isDirty = false;
-                    showStatus('Settings saved. The article list on your device is refreshing.', 'success');
+                    articleUrls = validArticleUrls;
+                    const droppedNote = droppedCount > 0
+                        ? ' Removed ' + droppedCount + (droppedCount === 1 ? ' stored link that was' : ' stored links that were') + ' not an http:// or https:// URL.'
+                        : '';
+                    showStatus('Settings saved. The article list on your device is refreshing.' + droppedNote, 'success');
                 } else {
                     const error = await response.json().catch(() => ({}));
                     showStatus('Not saved: ' + (error.error || 'the plugin could not save your settings.') + ' Try again.', 'error');

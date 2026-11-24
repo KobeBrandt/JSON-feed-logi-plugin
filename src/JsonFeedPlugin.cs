@@ -148,8 +148,9 @@ namespace Loupedeck.JsonFeedPlugin
                 return;
             }
 
-            var url = this.WebServer.SettingsUrl;
-            PluginLog.Info($"Opening settings URL: {url}");
+            // The launch URL holds the session token, so log only the base URL.
+            var url = this.WebServer.SettingsLaunchUrl;
+            PluginLog.Info($"Opening settings URL: {this.WebServer.SettingsUrl}");
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
         }
 

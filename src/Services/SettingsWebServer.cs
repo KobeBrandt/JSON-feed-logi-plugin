@@ -4,6 +4,7 @@ namespace Loupedeck.JsonFeedPlugin.Services
     using System.Globalization;
     using System.IO;
     using System.Net;
+    using System.Security.Cryptography;
     using System.Text;
     using System.Text.Json;
     using System.Threading;
@@ -33,7 +34,18 @@ namespace Loupedeck.JsonFeedPlugin.Services
             WriteIndented = true
         };
 
+        private const String TokenHeaderName = "X-Settings-Token";
+
+        // Random secret for this plugin session. Only the settings page the plugin opens knows it,
+        // so other web pages open in the browser cannot call the /api endpoints.
+        private readonly String _sessionToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+
         public String SettingsUrl => "http://localhost:" + this._activePort + "/";
+
+        // The URL the plugin opens. It carries the session token for the settings page.
+        public String SettingsLaunchUrl => this.SettingsUrl + "?token=" + this._sessionToken;
+
+        private String SettingsOrigin => "http://localhost:" + this._activePort;
 
         public void SetPlugin(JsonFeedPlugin plugin)
         {
@@ -183,20 +195,23 @@ namespace Loupedeck.JsonFeedPlugin.Services
                     return;
                 }
 
-                this.AddCorsHeaders(response);
+                var path = request.Url?.AbsolutePath ?? "/";
 
-                if (request.HttpMethod == "OPTIONS")
+                if (path.StartsWith("/api/", StringComparison.Ordinal) && !this.IsTrustedApiRequest(request))
                 {
-                    response.StatusCode = 200;
-                    response.Close();
+                    PluginLog.Warning("Rejected settings API request without a valid token or with a foreign Origin");
+                    this.SendError(response, 403, "Forbidden");
                     return;
                 }
-
-                var path = request.Url?.AbsolutePath ?? "/";
 
                 switch (path)
                 {
                     case "/":
+                        if (request.HttpMethod != "GET")
+                        {
+                            this.SendError(response, 405, "Method not allowed");
+                            return;
+                        }
                         this.ServeSettingsUI(response);
                         break;
                     case "/api/settings":
@@ -206,9 +221,9 @@ namespace Loupedeck.JsonFeedPlugin.Services
                         }
                         else if (request.HttpMethod == "POST")
                         {
-                            if (!this.IsSameOriginJsonRequest(request))
+                            if (!IsJsonRequest(request))
                             {
-                                this.SendError(response, 403, "Forbidden");
+                                this.SendError(response, 415, "Content-Type must be application/json");
                                 return;
                             }
                             this.SaveSettings(request, response);
@@ -248,26 +263,28 @@ namespace Loupedeck.JsonFeedPlugin.Services
             return isLoopback || isLocalhost;
         }
 
-        // Other websites open in the browser can also reach localhost. Only accept saves that
-        // come from the settings page itself and send JSON, so a web page cannot change the feeds.
-        private Boolean IsSameOriginJsonRequest(HttpListenerRequest request)
+        // Other websites open in the browser can also reach localhost. An /api call must carry the
+        // session token and must not come from a foreign Origin, so a web page cannot read or change the feeds.
+        private Boolean IsTrustedApiRequest(HttpListenerRequest request)
         {
-            var contentType = request.ContentType ?? String.Empty;
-            if (!contentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase))
+            var origin = request.Headers["Origin"];
+            if (!String.IsNullOrEmpty(origin)
+                && !String.Equals(origin.TrimEnd('/'), this.SettingsOrigin, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            var origin = request.Headers["Origin"];
-            return String.IsNullOrEmpty(origin)
-                || String.Equals(origin.TrimEnd('/'), this.SettingsUrl.TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
+            var token = request.Headers[TokenHeaderName] ?? String.Empty;
+            return CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(token),
+                Encoding.UTF8.GetBytes(this._sessionToken));
         }
 
-        private void AddCorsHeaders(HttpListenerResponse response)
+        private static Boolean IsJsonRequest(HttpListenerRequest request)
         {
-            response.Headers.Add("Access-Control-Allow-Origin", "http://localhost");
-            response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-            response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+            var contentType = request.ContentType ?? String.Empty;
+            var mediaType = contentType.Split(';')[0].Trim();
+            return String.Equals(mediaType, "application/json", StringComparison.OrdinalIgnoreCase);
         }
 
         private String GetSettingsFilePath()
@@ -370,7 +387,15 @@ namespace Loupedeck.JsonFeedPlugin.Services
                      
                      // Deserialize the full settings object
                      var settingsData = JsonDocument.Parse(json);
-                     
+
+                     var invalidUrl = FindInvalidUrl(settingsData.RootElement);
+                     if (invalidUrl != null)
+                     {
+                         PluginLog.Warning("Rejected settings save with a URL that is not http or https: " + invalidUrl);
+                         this.SendError(response, 400, "Only http:// and https:// URLs are allowed. Rejected URL: " + invalidUrl);
+                         return;
+                     }
+
                      // Save ArticleSettings if present
                      if (settingsData.RootElement.TryGetProperty("articleUrls", out var articleUrlsElement) ||
                          settingsData.RootElement.TryGetProperty("defaultUrl", out _))
@@ -424,6 +449,50 @@ namespace Loupedeck.JsonFeedPlugin.Services
                  this.SendError(response, 500, "Failed to save settings");
              }
          }
+
+        // Returns the first URL in the request that is not http or https, or null when all are valid.
+        // An empty defaultUrl is allowed, because it means "no fallback link".
+        private static String? FindInvalidUrl(JsonElement root)
+        {
+            var urls = new List<String?>();
+
+            if (root.TryGetProperty("articleUrls", out var articleUrls) && articleUrls.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in articleUrls.EnumerateArray())
+                {
+                    urls.Add(item.ValueKind == JsonValueKind.String ? item.GetString() : item.GetRawText());
+                }
+            }
+
+            if (root.TryGetProperty("namedUrls", out var namedUrls) && namedUrls.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in namedUrls.EnumerateArray())
+                {
+                    var hasUrl = item.ValueKind == JsonValueKind.Object
+                        && item.TryGetProperty("url", out var urlElement)
+                        && urlElement.ValueKind == JsonValueKind.String;
+                    urls.Add(hasUrl ? item.GetProperty("url").GetString() : item.GetRawText());
+                }
+            }
+
+            if (root.TryGetProperty("defaultUrl", out var defaultUrl) && defaultUrl.ValueKind != JsonValueKind.Null)
+            {
+                var value = defaultUrl.ValueKind == JsonValueKind.String ? defaultUrl.GetString() : defaultUrl.GetRawText();
+                if (!String.IsNullOrEmpty(value))
+                {
+                    urls.Add(value);
+                }
+            }
+
+            foreach (var url in urls)
+            {
+                if (!WebUrl.IsValid(url))
+                {
+                    return url ?? "(empty)";
+                }
+            }
+            return null;
+        }
 
         private void SendTextResponse(HttpListenerResponse response, String content, String contentType)
         {
