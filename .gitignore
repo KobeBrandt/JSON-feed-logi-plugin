@@ -400,3 +400,8 @@ FodyWeavers.xsd
 .DS_Store
 .idea
 Releases
+# Built plugin packages (publish them as GitHub Release assets)
+*.lplug4
+
+# Local AI agent instructions
+CLAUDE.md
