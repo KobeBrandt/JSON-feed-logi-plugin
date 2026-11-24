@@ -116,6 +116,12 @@
         
          public static async Task<List<Article>> GetArticlesFromUrl(String url)
          {
+             if (!WebUrl.IsValid(url))
+             {
+                 PluginLog.Warning($"Skipped feed URL that is not an http or https URL: {url}");
+                 return null;
+             }
+
              try
              {
                  HttpResponseMessage response = await client.GetAsync(url);

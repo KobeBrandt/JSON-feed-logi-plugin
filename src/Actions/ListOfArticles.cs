@@ -124,10 +124,6 @@
             this.Close();
         }
 
-        private static Boolean IsWebUrl(String url)
-        {
-            return Uri.TryCreate(url, UriKind.Absolute, out var uri)
-                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
-        }
+        private static Boolean IsWebUrl(String url) => WebUrl.IsValid(url);
     }
 }
